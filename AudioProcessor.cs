@@ -140,7 +140,7 @@ namespace VstNetAudioPlugin
         byte[] colorBuffer = { };
 
         // Create arrays for complex data and FFT result
-        const int bufferSize = 512;
+        const int bufferSize = 1000;
         Complex32[] buffer = new Complex32[bufferSize]; // Using Complex32 type for complex numbers
         int head = 0;
         double[] magnitudes = new double[bufferSize / 2];
@@ -169,8 +169,7 @@ namespace VstNetAudioPlugin
             if (head != 0) return;
 
             // Perform FFT
-            Fourier.Forward(buffer, FourierOptions.NoScaling);
-
+            Fourier.Forward(buffer, FourierOptions.Default);
             
             double maxMag = 0;
             for (int i = 0; i < magnitudes.Length; i++)
@@ -183,7 +182,7 @@ namespace VstNetAudioPlugin
             }
 
 
-            float hzPerSample = SampleRate / bufferSize / 10;
+            float hzPerSample = SampleRate / bufferSize;
             float currentHz = 0;
             int currNote = 0;
             int sampleCount = 0;
@@ -191,26 +190,27 @@ namespace VstNetAudioPlugin
             for (int i = 0; i < magnitudes.Length; i++)
             {
                 if (currNote >= notes.Length - 1) break;
-                if(currentHz >= notes[currNote])
+
+                currentHz += hzPerSample;
+
+                if (currentHz < notes[currNote])
                 {
+                    sampleCount += 1;
+                    noteIntensity[currNote] += (float)magnitudes[i];
+                }
+
+                if (currentHz >= notes[currNote])
+                {
+
                     noteIntensity[currNote] /= sampleCount;
                     sampleCount = 0;
                     currNote += 1;
                 }
-                //if the current sample is less than the specified note frequency
-                if(currentHz < notes[currNote])
-                {
-                    //track the amount of samples so we can average
-                    sampleCount += 1;
-                    //Add to the note
-                    noteIntensity[currNote] += (float)magnitudes[i];
-                }
-                currentHz += hzPerSample;
             }
 
             for (int i = 0; i < noteIntensity.Length; i++)
             {
-                colorBuffer[i] = (byte)(noteIntensity[i] * 255 + 0.5);
+                colorBuffer[i] = (byte)(Math.Clamp(noteIntensity[i], 0, 1) * 255 + 0.5);
             }
 
             Delay.networking.SendByteArray("FFT" + delay.GetIndex(), colorBuffer);
