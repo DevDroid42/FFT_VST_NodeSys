@@ -126,7 +126,7 @@ namespace VstNetAudioPlugin
 
 
         // Create arrays for complex data and FFT result
-        const int bufferSize = 256;
+        const int bufferSize = 512;
         Complex32[] buffer = new Complex32[bufferSize]; // Using Complex32 type for complex numbers
         int head = 0;
         // process a single audio channel
