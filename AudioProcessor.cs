@@ -126,7 +126,7 @@ namespace VstNetAudioPlugin
 
 
         // Create arrays for complex data and FFT result
-        const int bufferSize = 512;
+        const int bufferSize = 2048;
         Complex32[] buffer = new Complex32[bufferSize]; // Using Complex32 type for complex numbers
         int head = 0;
         // process a single audio channel
@@ -146,7 +146,7 @@ namespace VstNetAudioPlugin
             // Perform FFT
             Fourier.Forward(buffer, FourierOptions.Default);
 
-            double[] magnitudes = new double[buffer.Length / 2];
+            double[] magnitudes = new double[buffer.Length / 8];
             int maxIndex = 0;
             double maxMag = 0;
             for (int i = 0; i < magnitudes.Length; i++)
